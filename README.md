@@ -10,3 +10,10 @@ Downloads all pdf files for COVID-19 information at Tokyo from https://www.bousa
 ```
 % go-tokyocovid
 ```
+## License
+
+MIT
+
+## Authors
+
+imaiks
