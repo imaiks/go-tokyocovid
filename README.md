@@ -3,7 +3,7 @@ Downloads all pdf files for COVID-19 confirmed number information at Tokyo from 
 
 ## Getting started
 ```
-% go get imaiks/go-tokyocovid
+% go get github.com/imaiks/go-tokyocovid
 ```
 
 ## Usage
