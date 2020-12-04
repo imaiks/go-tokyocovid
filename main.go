@@ -39,6 +39,16 @@ func retrieve(debugOn bool) {
 				fmt.Printf("Link found: %q -> %s\n", e.Text, link)
 			}
 			c.Visit(e.Request.AbsoluteURL(link))
+		} else if strings.Contains(e.Text, "最新の本部報") {
+			if debugOn {
+				fmt.Printf("Link found: %q -> %s\n", e.Text, link)
+			}
+			c.Visit(e.Request.AbsoluteURL(link))
+		} else if strings.Contains(e.Text, "報ー第") {
+			if debugOn {
+				fmt.Printf("Link found: %q -> %s\n", e.Text, link)
+			}
+			c.Visit(e.Request.AbsoluteURL(link))
 		}
 	})
 
@@ -65,7 +75,7 @@ func retrieve(debugOn bool) {
 		}
 	})
 
-	c.Visit("https://www.bousai.metro.tokyo.lg.jp/taisaku/saigai/1007261/index.html")
+	c.Visit("https://www.bousai.metro.tokyo.lg.jp/taisaku/saigai/1010035/index.html")
 }
 
 func main() {
