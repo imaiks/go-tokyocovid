@@ -2,12 +2,15 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -84,39 +87,70 @@ func retrieve(debugOn bool) {
 	c.Visit("https://www.bousai.metro.tokyo.lg.jp/taisaku/saigai/1010035/index.html")
 }
 
-func csvOut(files []string, debugOn bool) {
-	out, err := exec.Command("pdfgrep", "..*", files[0]).Output()
+func infectCol(col string) (nCol []string) {
+	s := strings.Fields(col)
+	// fmt.Println("town in:", col, " len:", len(s))
+	for _, w := range s {
+		if _, err := strconv.Atoi(w); err == nil {
+			nCol = append(nCol, w)
+		}
+	}
+	return nCol
+}
+
+func scatterTable(file string, l int, w *csv.Writer, debugOn bool) {
+	out, err := exec.Command("pdfgrep", "..*", file).Output()
 	if err != nil {
 		fmt.Println("err:", err)
 		return
 	}
+	date := file[:8]
+	var nInfected = []string{date}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	for scanner.Scan() {
 		s := strings.Trim(scanner.Text(), " ")
-		//fmt.Printf("town before:[%s]\n", s)
-		//fmt.Println("town before:[", len(s), "]")
 		if len(s) > 0 && (strings.HasPrefix(s, "千代田") ||
 			strings.HasPrefix(s, "世田谷") ||
 			strings.HasPrefix(s, "江戸川") ||
 			strings.HasPrefix(s, "小平") ||
 			strings.HasPrefix(s, "多摩") ||
 			strings.HasPrefix(s, "新島")) {
-			//fmt.Println("town in:[", s, "]")
+			region := strings.Fields(s)
+			if debugOn {
+				fmt.Println("town in:", region)
+			}
 			if scanner.Scan() {
-				s := strings.Split(strings.Trim(scanner.Text(), " "), " ")
-				fmt.Println(s)
-				fmt.Println("len: ", len(s))
-				wi := 0
-				for _, w := range s {
-					if len(w) != 0 {
-						wi++
-						fmt.Printf("%d [%v]\n", wi, w)
-					}
+				col := scanner.Text()
+				if len(col) == 0 {
+					scanner.Scan()
+					col = scanner.Text()
 				}
+				nInfected = append(nInfected, infectCol(scanner.Text())...)
 			}
 		}
 	}
+	if len(nInfected) < 62 {
+		return
+	}
+	if debugOn {
+		fmt.Println("infected len:", len(nInfected))
+	}
+	if err := w.Write(nInfected[:l]); err != nil {
+		log.Fatalln("error write:", err)
+	}
 
+}
+
+func filesToCSV(files []string, w io.Writer, debugOn bool) {
+	cw := csv.NewWriter(w)
+	if debugOn {
+		cw.Write(TokyoJISCodes())
+		fmt.Println("tokyo jis len:", len(TokyoJISCodes()))
+	}
+	for _, f := range files {
+		scatterTable(f, len(TokyoJISCodes()), cw, debugOn)
+	}
+	cw.Flush()
 }
 
 func main() {
@@ -127,6 +161,7 @@ func main() {
 	if !*csv {
 		retrieve(*debugOn)
 	} else if *csv {
-		csvOut(flag.Args(), *debugOn)
+		files := flag.Args()
+		filesToCSV(files, os.Stdout, *debugOn)
 	}
 }
