@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -82,9 +84,49 @@ func retrieve(debugOn bool) {
 	c.Visit("https://www.bousai.metro.tokyo.lg.jp/taisaku/saigai/1010035/index.html")
 }
 
+func csvOut(files []string, debugOn bool) {
+	out, err := exec.Command("pdfgrep", "..*", files[0]).Output()
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
+	scanner := bufio.NewScanner(strings.NewReader(string(out)))
+	for scanner.Scan() {
+		s := strings.Trim(scanner.Text(), " ")
+		//fmt.Printf("town before:[%s]\n", s)
+		//fmt.Println("town before:[", len(s), "]")
+		if len(s) > 0 && (strings.HasPrefix(s, "千代田") ||
+			strings.HasPrefix(s, "世田谷") ||
+			strings.HasPrefix(s, "江戸川") ||
+			strings.HasPrefix(s, "小平") ||
+			strings.HasPrefix(s, "多摩") ||
+			strings.HasPrefix(s, "新島")) {
+			//fmt.Println("town in:[", s, "]")
+			if scanner.Scan() {
+				s := strings.Split(strings.Trim(scanner.Text(), " "), " ")
+				fmt.Println(s)
+				fmt.Println("len: ", len(s))
+				wi := 0
+				for _, w := range s {
+					if len(w) != 0 {
+						wi++
+						fmt.Printf("%d [%v]\n", wi, w)
+					}
+				}
+			}
+		}
+	}
+
+}
+
 func main() {
 	debugOn := flag.Bool("d", false, "debug on")
+	csv := flag.Bool("c", false, "csv out")
 	flag.Parse()
 	makePdfTbl()
-	retrieve(*debugOn)
+	if !*csv {
+		retrieve(*debugOn)
+	} else if *csv {
+		csvOut(flag.Args(), *debugOn)
+	}
 }
