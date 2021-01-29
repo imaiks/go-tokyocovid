@@ -104,7 +104,7 @@ func scatterTable(file string, l int, w *csv.Writer, debugOn bool) {
 		fmt.Println("err:", err)
 		return
 	}
-	date := file[:8]
+	date := fmt.Sprintf("%s-%s-%s", file[:4], file[4:6], file[6:8])
 	var nInfected = []string{date}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	for scanner.Scan() {
@@ -135,7 +135,7 @@ func scatterTable(file string, l int, w *csv.Writer, debugOn bool) {
 	if debugOn {
 		fmt.Println("infected len:", len(nInfected))
 	}
-	if err := w.Write(nInfected[:l]); err != nil {
+	if err := w.Write(nInfected[:(l + 1)]); err != nil {
 		log.Fatalln("error write:", err)
 	}
 
@@ -143,8 +143,10 @@ func scatterTable(file string, l int, w *csv.Writer, debugOn bool) {
 
 func filesToCSV(files []string, w io.Writer, debugOn bool) {
 	cw := csv.NewWriter(w)
+	header := []string{"Date"}
+	header = append(header, TokyoJISCodes()...)
+	cw.Write(header)
 	if debugOn {
-		cw.Write(TokyoJISCodes())
 		fmt.Println("tokyo jis len:", len(TokyoJISCodes()))
 	}
 	for _, f := range files {
