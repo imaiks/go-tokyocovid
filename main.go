@@ -55,7 +55,7 @@ func retrieve(debugOn bool) {
 				fmt.Printf("Link found: %q -> %s\n", e.Text, link)
 			}
 			c.Visit(e.Request.AbsoluteURL(link))
-		} else if strings.Contains(e.Text, "報ー第") {
+		} else if strings.Contains(e.Text, "報（") {
 			if debugOn {
 				fmt.Printf("Link found: %q -> %s\n", e.Text, link)
 			}
